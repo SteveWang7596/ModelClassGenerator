@@ -1,0 +1,79 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'za.co.transactionjunction'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.9.8'
+}
+
+configurations {
+    jaxb
+}
+
+dependencies {
+    jaxb(
+            'com.sun.xml.bind:jaxb-xjc:2.2.7',
+            'com.sun.xml.bind:jaxb-impl:2.2.7'
+    )
+}
+
+application{
+    mainClassName = 'za.co.transactionjunction.Main'
+}
+
+task runConverter(type: JavaExec, group: 'application') {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'za.co.transactionjunction.Main'
+}
+
+task jaxb {
+    System.setProperty('javax.xml.accessExternalSchema', 'all')
+    def jaxbTargetDir = file("src/main/java")
+
+    doLast {
+        jaxbTargetDir.mkdirs()
+
+        ant.taskdef(
+                name: 'xjc',
+                classname: 'com.sun.tools.xjc.XJCTask',
+                classpath: configurations.jaxb.asPath
+        )
+        ant.jaxbTargetDir = jaxbTargetDir
+
+        ant.xjc(
+                destdir: '${jaxbTargetDir}',
+                package: 'za.co.transactionjunction.model.acceptorauthrequest',
+                schema: 'src/main/resources/caaa.001.001.09.xsd'
+        )
+    }
+
+    doLast {
+        jaxbTargetDir.mkdirs()
+
+        ant.taskdef(
+                name: 'xjc',
+                classname: 'com.sun.tools.xjc.XJCTask',
+                classpath: configurations.jaxb.asPath
+        )
+        ant.jaxbTargetDir = jaxbTargetDir
+
+        ant.xjc(
+                destdir: '${jaxbTargetDir}',
+                package: 'za.co.transactionjunction.model.acceptorauthresponse',
+                schema: 'src/main/resources/caaa.002.001.09.xsd'
+        )
+    }
+}
+
+compileJava.dependsOn jaxb
